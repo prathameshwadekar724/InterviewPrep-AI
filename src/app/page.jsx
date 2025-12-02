@@ -6,7 +6,7 @@ export default function LandingPage() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden relative bg-gradient-to-br from-[#0d0d0d] via-[#101830] to-[#050505] text-white px-4 py-16 flex flex-col items-center">
+    <main className="min-h-screen w-full overflow-x-hidden relative bg-linear-to-br from-[#0d0d0d] via-[#101830] to-[#050505] text-white px-4 py-16 flex flex-col items-center">
 
       {/* FORCE-CLIP ALL BACKGROUND ELEMENTS */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -16,11 +16,11 @@ export default function LandingPage() {
         <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-blue-600 opacity-20 blur-[150px] rounded-full"></div>
 
         {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[length:40px_40px] opacity-10"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-size-[40px_40px] opacity-10"></div>
       </div>
 
       {/* Title */}
-      <h1 className="text-4xl md:text-6xl font-extrabold tracking-wide z-10 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-xl">
+      <h1 className="text-4xl md:text-6xl font-extrabold tracking-wide z-10 text-center bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-xl">
         AI Interview Tutor
       </h1>
 

@@ -3,81 +3,107 @@ import { interviewModel } from "@/lib/gemini";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { role, difficulty, interviewType, history } = body;
+    const { role, difficulty, interviewType, history } = await req.json();
 
     const basePrompt = `
-You are an Interview Tutor.
+You are an AI Interview Tutor.
 Role: ${role}
 Difficulty: ${difficulty}
 Interview Type: ${interviewType}
 
 Rules:
-1. Ask one question at a time.
-2. Evaluate answer with score (0–10) + feedback.
-3. Total 5 questions.
-4. Always return VALID JSON. No explanations. No code blocks.
-If interview not finished:
+1. Ask ONE question at a time.
+2. For each answer, evaluate with:
+   - score (0–10)
+   - feedback (1–2 lines)
+   - correctAnswer (ideal industry-standard answer)
+3. Interview has TOTAL 5 questions.
+4. ALWAYS return ONLY VALID JSON. No markdown. No extra text.
+
+ONGOING FORMAT:
 {
  "mode": "ongoing",
  "questionNumber": <n>,
  "question": "",
- "score": null or number,
+ "correctAnswer": "",
+ "score": <number>,
  "feedback": "",
  "history": [...]
 }
-If finished:
+
+FINISHED FORMAT:
 {
  "mode": "finished",
- "finalReport": { ... }
+ "finalReport": {
+    "overallScore": number,
+    "strengths": [],
+    "areasForImprovement": [],
+    "recommendations": []
+ }
 }
-Return ONLY JSON. Remove markdown formatting.
+
+Return ONLY valid JSON.
 `;
 
-    const historyText = history?.length
-      ? history
-          .map(
-            (h, i) => `
+    // Convert history into readable prompt
+    let historyBlock = "No previous questions. Start with Question 1.";
+
+    if (history && history.length > 0) {
+      historyBlock = history
+        .map(
+          (h, i) => `
 Q${i + 1}: ${h.question}
-Answer: ${h.answer}
+User Answer: ${h.answer}
+Correct Answer: ${h.correctAnswer || ""}
 Score: ${h.score || ""}
 Feedback: ${h.feedback || ""}
 `
-          )
-          .join("\n")
-      : "No history. Start with Question 1.";
+        )
+        .join("\n");
+    }
 
+    // Instruction for next step
     const instruction =
-      history?.length > 0
-        ? `Evaluate last answer, then ask next question unless total = 5.`
-        : `Ask Question 1 only.`;
+      history?.length >= 1 && history.length < 5
+        ? "Evaluate the last answer and ask the next question."
+        : history.length >= 5
+        ? "Generate the FINAL REPORT only."
+        : "Ask Question 1.";
 
-    const prompt = basePrompt + "\n" + historyText + "\n" + instruction;
+    const finalPrompt = `${basePrompt}\n${historyBlock}\n${instruction}`;
 
+    // Gemini API call
     const result = await interviewModel.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7 },
+      contents: [{ role: "user", parts: [{ text: finalPrompt }] }],
+      generationConfig: { temperature: 0.5 },
     });
 
-    let text = result.response.text();
+    let output = result.response.text();
 
-    // 🟢 FIX: remove ```json and ```
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    // CLEAN OUTPUT → remove ```json / ```
+    output = output
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
 
-    // Try parsing JSON
+    // Parse safely
     let json;
     try {
-      json = JSON.parse(text);
+      json = JSON.parse(output);
     } catch (err) {
-      console.log("RAW GEMINI OUTPUT:", text);
+      console.log("⛔ RAW GEMINI OUTPUT:", output);
       return NextResponse.json(
-        { error: "JSON parse error", raw: text },
+        {
+          error: "AI returned invalid JSON",
+          raw: output,
+        },
         { status: 500 }
       );
     }
 
     return NextResponse.json(json);
   } catch (err) {
+    console.log("SERVER ERROR:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
