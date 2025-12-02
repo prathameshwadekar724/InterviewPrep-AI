@@ -4,7 +4,7 @@ An AI–powered mock interview platform built with **Next.js 16, TailwindCSS, an
 It dynamically generates interview questions, evaluates answers in real time, and produces a detailed performance dashboard including **strengths, weaknesses, and recommendations**.
 
 Live Demo (if deployed):
-👉 [https://your-project-url.vercel.app](https://interview-prep-ai-navy.vercel.app/)
+👉 [https://interview-prep-ai-navy.vercel.app](https://interview-prep-ai-navy.vercel.app/)
 
 ---
 
